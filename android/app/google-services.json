@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "473244746879",
-    "project_id": "auth-dee67",
-    "storage_bucket": "auth-dee67.firebasestorage.app"
+    "project_number": "641038792007",
+    "project_id": "auth-flutter-ca276",
+    "storage_bucket": "auth-flutter-ca276.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:473244746879:android:af8406a78491cf8cc1eb4a",
+        "mobilesdk_app_id": "1:641038792007:android:34327ba10793d090ecc862",
         "android_client_info": {
           "package_name": "com.example.firebase"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBEcMLKIbFhWWRfEYN7LD6J8ESX8yki3z4"
+          "current_key": "AIzaSyDlUM6F0zG-DMWnHN6nuop23tlS4je_wIY"
         }
       ],
       "services": {
