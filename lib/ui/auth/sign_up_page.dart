@@ -15,10 +15,21 @@ class _SignUpPageState extends State<SignUpPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _formKey = GlobalKey<FormState>();
 
-  TextEditingController nameController = TextEditingController();
+  TextEditingController firstName = TextEditingController();
+  TextEditingController lastName = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
+
+  List<String>? role;
+  String? selectedRole;
+
+  @override
+  void initState() {
+    role = ['user', 'admin'];
+    selectedRole = role![0];
+    super.initState();
+  }
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
@@ -33,9 +44,10 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
-          'name': nameController.text,
+          'first_name': firstName.text,
+          'last_name': lastName.text,
           'email': emailController.text,
-          'password': passwordController.text,
+          'role': selectedRole!.toUpperCase(),
         });
 
         Navigator.pushReplacementNamed(context, '/home');
@@ -107,9 +119,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   SizedBox(
                     width: query9(context),
                     child: TextFormField(
-                      controller: nameController,
+                      controller: firstName,
                       decoration: InputDecoration(
-                        hintText: "Name",
+                        hintText: "First Name",
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -119,7 +131,31 @@ class _SignUpPageState extends State<SignUpPage> {
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Nama tidak boleh kosong';
+                          return 'First name tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  SizedBox(
+                    width: query9(context),
+                    child: TextFormField(
+                      controller: lastName,
+                      decoration: InputDecoration(
+                        hintText: "Last Name",
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      keyboardType: TextInputType.name,
+                      textInputAction: TextInputAction.next,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Last name tidak boleh kosong';
                         }
                         return null;
                       },
@@ -154,10 +190,6 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  SizedBox(width: query9(context), child: Text("Role")),
                   const SizedBox(
                     height: 10,
                   ),
@@ -241,6 +273,32 @@ class _SignUpPageState extends State<SignUpPage> {
                         } else {
                           return null;
                         }
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  SizedBox(width: query9(context), child: Text("Role")),
+                  SizedBox(
+                    width: query9(context),
+                    child: DropdownButton(
+                      value: selectedRole,
+                      items: role!
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(
+                          () {
+                            selectedRole = value;
+                          },
+                        );
+                        print(selectedRole);
                       },
                     ),
                   ),
