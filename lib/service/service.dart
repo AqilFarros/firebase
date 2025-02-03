@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -48,4 +49,11 @@ class FirebaseService {
   }
 
   get currentUser => _auth.currentUser;
+
+  Future<Map<String, dynamic>> getUserData(String userId) async {
+    final DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection("users").doc(userId).get();
+
+    return userDoc.data() as Map<String, dynamic>;
+  }
 }
