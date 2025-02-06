@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -56,4 +58,91 @@ class FirebaseService {
 
     return userDoc.data() as Map<String, dynamic>;
   }
+
+  // add note
+  Future<void> addNote(String title, String content, String imageUrl) async {
+    String? userId = _auth.currentUser!.uid;
+
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .add({
+        "title": title,
+        "content": content,
+        "image_url": imageUrl,
+        "user_id": userId,
+        "created_at": FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  Stream<QuerySnapshot> getNotes() {
+    String? userId = _auth.currentUser!.uid;
+
+    if (userId != null) {
+      return FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .orderBy('created_at', descending: true)
+          .snapshots();
+    }
+
+    return const Stream.empty();
+  }
+
+  Future<void> deleteNote(String noteId) async {
+    String? userId = _auth.currentUser!.uid;
+
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection('notes')
+          .doc(noteId)
+          .delete();
+    }
+  }
+
+  Future<void> updateNote(
+      String noteId, String title, String content, String imageUrl) async {
+    String? userId = _auth.currentUser!.uid;
+
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .collection("notes")
+        .doc(noteId)
+        .update({
+      "title": title,
+      "content": content,
+      "image_url": imageUrl,
+    });
+  }
+
+  Future<void> forgotPassword(String email) async {
+    if (email.isEmpty) {
+      return;
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      if (kDebugMode) {
+        throw Exception(e);
+      }
+    }
+  }
+
+  Future<void> updateProfile(String firstName, String lastName) async {
+    String? userId = _auth.currentUser!.uid;
+    await FirebaseFirestore.instance.collection("users").doc(userId).update({
+      "first_name": firstName,
+      "last_name": lastName,
+    });
+  }
+
+  // update email
 }

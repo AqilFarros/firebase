@@ -67,6 +67,14 @@ class _HomePageState extends State<HomePage> {
                   'UID: ${_auth.currentUser.uid}',
                   style: subWelcomeTextStyle,
                 ),
+                Text(
+                  'Nama: ${snapshot.data!['first_name']} ${snapshot.data!['last_name']}',
+                  style: subWelcomeTextStyle,
+                ),
+                Text(
+                  "Role: ${snapshot.data!['role']}",
+                  style: subWelcomeTextStyle,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -83,7 +91,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/note');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
                       ),
@@ -95,7 +105,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/profile');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                       ),
