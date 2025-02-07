@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/note': (context) => const NotePage(),
         '/profile': (context) => const ProfilePage(),
+        '/change-password': (context) => const ChangePasswordPage(),
       },
       home: const SignInPage(),
     );
