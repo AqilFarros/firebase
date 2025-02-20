@@ -79,7 +79,9 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/home-attendace');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                       ),

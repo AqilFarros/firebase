@@ -34,6 +34,10 @@ class MyApp extends StatelessWidget {
         '/note': (context) => const NotePage(),
         '/profile': (context) => const ProfilePage(),
         '/change-password': (context) => const ChangePasswordPage(),
+        '/home-attendace': (context) => const HomeAttendancePage(),
+        '/attendance': (context) => const AttendancePage(),
+        '/leave': (context) => const LeavePage(),
+        '/history': (context) => const HistoryPage(),
       },
       home: const SignInPage(),
     );
