@@ -11,6 +11,9 @@ class _HomeAttendancePageState extends State<HomeAttendancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Home Attendance"),
+      ),
       body: Center(
         child: Column(
           children: [
