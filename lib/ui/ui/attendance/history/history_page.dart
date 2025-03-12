@@ -8,8 +8,71 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  final dataService = DataServiceHistoryAttendance();
+
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("History Attendance"),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: dataService.getAttendanceStream(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text("Error loading data"),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text("No data available"),
+            );
+          }
+
+          final data = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              return AttendanceCardWidget(
+                data: data[index].data() as Map<String, dynamic>,
+                attendanceId: data[index].id,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class DataServiceHistoryAttendance {
+  final auth = FirebaseAuth.instance;
+
+  // get id attendance
+  CollectionReference getUserAttendance() {
+    final String? userId = auth.currentUser!.uid;
+
+    if (userId == null) {
+      throw Exception('User has\'t logged in');
+    }
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('attendance');
+  }
+
+  // get data attendance user
+  Stream<QuerySnapshot> getAttendanceStream() {
+    return getUserAttendance().snapshots();
   }
 }

@@ -341,9 +341,10 @@ class _LeavePageState extends State<LeavePage> {
 
     DocumentReference userDocRef = firestore.collection('users').doc(userId);
     CollectionReference attendanceCollection =
-        userDocRef.collection('attendace');
+        userDocRef.collection('attendance');
 
     attendanceCollection.add({
+      'address': "",
       'name': name,
       'description': status,
       'datetime': "$from-$to",

@@ -1,107 +1,125 @@
-part of '../../../pages.dart';
+import 'dart:io';
 
+import 'package:firebase/ui/ui/attendance/attendance/attendance_page.dart';
+import 'package:firebase/utils/detection/google_ml_kit.dart';
+import 'package:flutter/material.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:camera/camera.dart';
+ 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
-
+ 
   @override
   State<CameraPage> createState() => _CameraPageState();
 }
-
+ 
 class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
-  // set face detector
-  final FaceDetector _faceDetector =
-      GoogleMlKit.vision.faceDetector(FaceDetectorOptions(
-    enableContours: true,
-    enableClassification: true,
-    enableLandmarks: true,
-    enableTracking: true,
+  //set face detection
+  FaceDetector faceDetector = GoogleMlKit.vision.faceDetector(FaceDetectorOptions(
+      enableContours: true,
+      enableClassification: true,
+      enableTracking: true,
+      enableLandmarks: true
   ));
-
+ 
   List<CameraDescription>? cameras;
   CameraController? controller;
   XFile? image;
   bool isBusy = false;
-
-  void loadCamera() async {
-    cameras = await availableCameras();
-
-    if (cameras != null) {
-      controller = CameraController(cameras![1], ResolutionPreset.max);
-      controller!.initialize().then((_) {
-        if (!mounted) {
-          return;
-        } else {
-          setState(() {});
-        }
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("No camera available"),
-        ),
-      );
-    }
-  }
-
+ 
   @override
   void initState() {
     loadCamera();
     super.initState();
   }
-
+ 
+  loadCamera() async {
+    cameras = await availableCameras();
+    if (cameras != null) {
+      controller = CameraController(cameras![1], ResolutionPreset.max);
+      controller!.initialize().then((_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {});
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.camera_enhance_outlined,
+              color: Colors.white,
+            ),
+            SizedBox(width: 10),
+            Text("Ups, camera not found!", style: TextStyle(color: Colors.white))
+          ],
+        ),
+        backgroundColor: Colors.blueGrey,
+        shape: StadiumBorder(),
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+ 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-
-    // set loading
+ 
+    //set loading
     showLoaderDialog(BuildContext context) {
-      AlertDialog alertDialog = AlertDialog(
+      AlertDialog alert = AlertDialog(
         content: Row(
-          children: <Widget>[
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+          children: [
+            const CircularProgressIndicator(valueColor:
+            AlwaysStoppedAnimation<Color>(Colors.blueAccent)),
+            Container(
+                margin: const EdgeInsets.only(left: 20),
+                child: const Text("Checking the data...")
             ),
           ],
         ),
       );
-
       showDialog(
         barrierDismissible: false,
         context: context,
-        builder: (BuildContext context) => alertDialog,
+        builder: (BuildContext context) {
+          return alert;
+        },
       );
     }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text("Camera"),
+        elevation: 0,
         backgroundColor: Colors.blueAccent,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          "Capture a selfie image",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
       body: Stack(
-        children: <Widget>[
+        children: [
           SizedBox(
-            height: size.height,
-            width: size.width,
-            child: controller == null
-                ? const Center(
-                    child: Text("Camera Error"),
-                  )
-                : !controller!.value.isInitialized
-                    ? const Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : CameraPreview(controller!),
+              height: size.height,
+              width: size.width,
+              child: controller == null
+                  ? const Center(child: Text("Ups, camera error!",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))
+                  : !controller!.value.isInitialized
+                  ? const Center(child: CircularProgressIndicator())
+                  : CameraPreview(controller!)
           ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.only(top: 40),
             child: Lottie.asset(
-              'assets/raw/face_id_ring.json',
+              "assets/raw/face_id_ring.json",
               fit: BoxFit.cover,
             ),
           ),
@@ -135,8 +153,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                         child: InkWell(
                           splashColor: Colors.blue, // Splash color
                           onTap: () async {
-                            final hasPermission =
-                                await handleLocationPermission();
+                            final hasPermission = await handleLocationPermission();
                             try {
                               if (controller != null) {
                                 if (controller!.value.isInitialized) {
@@ -145,19 +162,12 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                                   setState(() {
                                     if (hasPermission) {
                                       showLoaderDialog(context);
-                                      final inputImage =
-                                          InputImage.fromFilePath(image!.path);
-                                      Platform.isAndroid
-                                          ? processImage(inputImage)
-                                          : Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AttendancePage(
-                                                          image: image)));
-                                    } else {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
+                                      final inputImage = InputImage.fromFilePath(image!.path);
+                                      Platform.isAndroid ? processImage(inputImage) : Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) => AttendancePage(image: image)));
+                                    }
+                                    else {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                                         content: Row(
                                           children: [
                                             Icon(
@@ -165,10 +175,8 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                                               color: Colors.white,
                                             ),
                                             SizedBox(width: 10),
-                                            Text(
-                                              "Please allow the permission first!",
-                                              style: TextStyle(
-                                                  color: Colors.white),
+                                            Text("Please allow the permission first!",
+                                              style: TextStyle(color: Colors.white),
                                             )
                                           ],
                                         ),
@@ -181,8 +189,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                                 }
                               }
                             } catch (e) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(SnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Row(
                                   children: [
                                     const Icon(
@@ -190,10 +197,8 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                                       color: Colors.white,
                                     ),
                                     const SizedBox(width: 10),
-                                    Text(
-                                      "Ups, $e",
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                    Text("Ups, $e",
+                                      style: const TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
@@ -223,8 +228,8 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
       ),
     );
   }
-
-  // permission location
+ 
+  //permission location
   Future<bool> handleLocationPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -236,8 +241,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
               color: Colors.white,
             ),
             SizedBox(width: 10),
-            Text(
-              "Location services are disabled. Please enable the services.",
+            Text("Location services are disabled. Please enable the services.",
               style: TextStyle(color: Colors.white),
             )
           ],
@@ -248,7 +252,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
       ));
       return false;
     }
-
+ 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -261,8 +265,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
                 color: Colors.white,
               ),
               SizedBox(width: 10),
-              Text(
-                "Location permission denied.",
+              Text("Location permission denied.",
                 style: TextStyle(color: Colors.white),
               )
             ],
@@ -274,7 +277,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
         return false;
       }
     }
-
+ 
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Row(
@@ -284,8 +287,7 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
               color: Colors.white,
             ),
             SizedBox(width: 10),
-            Text(
-              "Location permission denied forever, we cannot access.",
+            Text("Location permission denied forever, we cannot access.",
               style: TextStyle(color: Colors.white),
             )
           ],
@@ -298,21 +300,20 @@ class _CameraPageState extends State<CameraPage> with TickerProviderStateMixin {
     }
     return true;
   }
-
-  // face detection
+ 
+  //face detection
   Future<void> processImage(InputImage inputImage) async {
+    if (isBusy) return;
     isBusy = true;
-    final faces = await _faceDetector.processImage(inputImage);
+    final faces = await faceDetector.processImage(inputImage);
     isBusy = false;
-
+ 
     if (mounted) {
       setState(() {
         Navigator.of(context).pop(true);
         if (faces.length > 0) {
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => AttendancePage(image: image)));
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => AttendancePage(image: image)));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Row(

@@ -17,10 +17,12 @@ class _HomePageState extends State<HomePage> {
 
   void _signOut() async {
     await _auth.signOut();
-    Navigator.pushReplacementNamed(
-      context,
-      '/sign-in',
-    );
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+        context,
+        '/sign-in',
+      );
+    }
   }
 
   @override
@@ -50,97 +52,144 @@ class _HomePageState extends State<HomePage> {
               child: Text("User data not found."),
             );
           }
-          return Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  welcomeText,
-                  style: welcomeTextStyle,
-                ),
-                Text(
-                  "Email saya: ${_auth.currentUser.email}",
-                  style: subWelcomeTextStyle.copyWith(fontSize: 16),
-                ),
-                Text(
-                  'UID: ${_auth.currentUser.uid}',
-                  style: subWelcomeTextStyle,
-                ),
-                Text(
-                  'Nama: ${snapshot.data!['first_name']} ${snapshot.data!['last_name']}',
-                  style: subWelcomeTextStyle,
-                ),
-                Text(
-                  "Role: ${snapshot.data!['role']}",
-                  style: subWelcomeTextStyle,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/home-attendace');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                      ),
-                      child: Text(
-                        "Attendace",
-                        style: TextStyle(
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/note');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amberAccent,
-                      ),
-                      child: Text(
-                        "Notes",
-                        style: TextStyle(
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    TextButton(
+          var userData = snapshot.data!;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  homeProfile(
+                    firstName: userData['first_name'],
+                    lastName: userData['last_name'],
+                  ),
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  homeButton(widget: [
+                    homeCard(
+                      color: Colors.blue,
+                      iconData: Icons.person,
+                      text: "Profile",
                       onPressed: () {
                         Navigator.pushNamed(context, '/profile');
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                      ),
-                      child: Text(
-                        "Profile",
-                        style: TextStyle(
-                          color: colorWhite,
-                        ),
-                      ),
                     ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _signOut();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                  ),
-                  child: Text(
-                    "Sign Out",
-                    style: TextStyle(
-                      color: colorWhite,
+                    const SizedBox(
+                      width: 8,
                     ),
-                  ),
-                ),
-              ],
+                    homeCard(
+                      color: Colors.green,
+                      iconData: Icons.timelapse,
+                      text: "Attendance",
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/home-attendace');
+                      },
+                    ),
+                  ]),
+                  homeButton(widget: [
+                    homeCard(
+                      color: Colors.amber,
+                      iconData: Icons.note_alt,
+                      text: "Note",
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/note');
+                      },
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    homeCard(
+                      color: Colors.red,
+                      iconData: Icons.logout_rounded,
+                      text: "Sign Out",
+                      onPressed: () {
+                        _signOut();
+                      },
+                    ),
+                  ]),
+                ],
+              ),
             ),
           );
         },
       ),
     );
   }
+}
+
+Widget homeCard(
+    {required IconData iconData,
+    required String text,
+    required Color color,
+    required VoidCallback onPressed}) {
+  return Expanded(
+    child: ElevatedButton(
+      onPressed: onPressed as void Function()?,
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        backgroundColor: color,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            iconData,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(
+            width: 5,
+          ),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget homeButton({required List<Widget> widget}) {
+  return Row(
+    children: widget,
+  );
+}
+
+Widget clockAndNotes() {
+  return Row();
+}
+
+Widget homeProfile({
+  required String firstName,
+  required String lastName,
+}) {
+  return Column(
+    children: [
+      CircleAvatar(
+        backgroundImage: AssetImage("assets/images/dummy_picture.webp"),
+        minRadius: 100,
+        maxRadius: 150,
+      ),
+      const SizedBox(
+        height: 12,
+      ),
+      Text(
+        "👋 Hello, $firstName $lastName",
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
 }
