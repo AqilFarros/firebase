@@ -1,5 +1,6 @@
 import 'package:firebase/ui/pages.dart';
 import 'package:firebase/ui/ui/attendance/attendance/attendance_page.dart';
+import 'package:firebase/ui/ui/attendance/history/demo_history.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         '/home-attendace': (context) => const HomeAttendancePage(),
         '/attendance': (context) => const AttendancePage(),
         '/leave': (context) => const LeavePage(),
-        '/history': (context) => const HistoryPage(),
+        '/history': (context) => const DemoHistory(),
       },
       home: const SignInPage(),
     );

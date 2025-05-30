@@ -49,7 +49,7 @@ class _SignUpPageState extends State<SignUpPage> {
           'email': emailController.text,
           'role': selectedRole!.toUpperCase(),
         });
-  
+
         Navigator.pushReplacementNamed(context, '/home');
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -79,9 +79,6 @@ class _SignUpPageState extends State<SignUpPage> {
             children: [
               Column(
                 children: [
-                  const SizedBox(
-                    height: 50,
-                  ),
                   Container(
                     width: query9(context),
                     height: 200,

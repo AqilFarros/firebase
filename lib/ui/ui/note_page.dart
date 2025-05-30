@@ -13,6 +13,10 @@ class _NotePageState extends State<NotePage> {
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
 
+  final TextEditingController _editTitleController = TextEditingController();
+  final TextEditingController _editContentController = TextEditingController();
+  final TextEditingController _editImageUrlController = TextEditingController();
+
   void _addNote() async {
     if (_titleController.text.isEmpty ||
         _contentController.text.isEmpty ||
@@ -27,11 +31,53 @@ class _NotePageState extends State<NotePage> {
     }
   }
 
+  void _showNote(String title, String content, String imageUrl) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  "Close note",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+            title: Text(title),
+            content: Column(
+              children: [
+                Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  width: MediaQuery.of(context).size.width,
+                  height: 200,
+                ),
+                Text(content),
+              ],
+            ),
+          );
+        });
+  }
+
   void _updateNote(
       String noteId, String title, String content, String imageUrl) async {
-    _titleController.text = title;
-    _contentController.text = content;
-    _imageUrlController.text = imageUrl;
+    _editTitleController.text = title;
+    _editContentController.text = content;
+    _editImageUrlController.text = imageUrl;
 
     showDialog(
         context: context,
@@ -48,9 +94,9 @@ class _NotePageState extends State<NotePage> {
                 onPressed: () async {
                   await _firebaseServie.updateNote(
                       noteId,
-                      _titleController.text,
-                      _contentController.text,
-                      _imageUrlController.text);
+                      _editTitleController.text,
+                      _editContentController.text,
+                      _editImageUrlController.text);
                   Navigator.pop(context);
                 },
                 child: const Text("Update"),
@@ -61,7 +107,7 @@ class _NotePageState extends State<NotePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: _titleController,
+                  controller: _editTitleController,
                   decoration: const InputDecoration(
                     labelText: 'Title',
                     border: OutlineInputBorder(),
@@ -71,7 +117,7 @@ class _NotePageState extends State<NotePage> {
                   height: 10,
                 ),
                 TextFormField(
-                  controller: _imageUrlController,
+                  controller: _editImageUrlController,
                   decoration: const InputDecoration(
                     labelText: 'Image URL',
                     border: OutlineInputBorder(),
@@ -81,7 +127,7 @@ class _NotePageState extends State<NotePage> {
                   height: 10,
                 ),
                 TextFormField(
-                  controller: _contentController,
+                  controller: _editContentController,
                   decoration: const InputDecoration(
                     labelText: 'Content',
                     border: OutlineInputBorder(),
@@ -144,7 +190,20 @@ class _NotePageState extends State<NotePage> {
                   onPressed: () {
                     _addNote();
                   },
-                  child: const Text('Save Note'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -167,58 +226,108 @@ class _NotePageState extends State<NotePage> {
                     child: Text("No notes found."),
                   );
                 } else {
-                  return ListView.builder(
-                    itemCount: snapshot.data!.docs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 5,
-                        margin: const EdgeInsets.all(10),
-                        color: Colors.grey[200],
-                        child: ListTile(
-                          title: Text(snapshot.data!.docs[index]['title']),
-                          subtitle: Text(
-                            snapshot.data!.docs[index]['content'],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          leading: Image.network(
-                            snapshot.data!.docs[index]['image_url'],
-                            width: 50,
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  _updateNote(
-                                    snapshot.data!.docs[index].id,
-                                    snapshot.data!.docs[index]['title'],
-                                    snapshot.data!.docs[index]['content'],
-                                    snapshot.data!.docs[index]['image_url'],
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.amber,
+                  List<List<QueryDocumentSnapshot>> notes = [];
+                  for (int i = 0; i < snapshot.data!.docs.length; i += 2) {
+                    notes.add(snapshot.data!.docs.sublist(
+                        i, (i + 2).clamp(0, snapshot.data!.docs.length)));
+                  }
+
+                  return ListView(
+                    children: notes.map((pair) {
+                      return Row(
+                        children: pair.map((doc) {
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                _showNote(doc['title'], doc['content'],
+                                    doc['image_url']);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                height: MediaQuery.of(context).size.width / 2,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(doc['image_url']),
+                                    fit: BoxFit.cover,
+                                    opacity: 0.4,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.black,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      doc['title'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            _updateNote(
+                                              doc.id,
+                                              doc['title'],
+                                              doc['content'],
+                                              doc['image_url'],
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.amber,
+                                            ),
+                                            child: const Icon(
+                                              Icons.edit,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          width: 10,
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            _deleteNote(doc.id);
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              color: Colors.red,
+                                            ),
+                                            child: const Icon(
+                                              Icons.delete,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  _deleteNote(snapshot.data!.docs[index].id);
-                                },
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        }).toList(),
                       );
-                    },
+                    }).toList(),
                   );
                 }
               },

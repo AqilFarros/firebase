@@ -13,6 +13,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController lastNameController = TextEditingController();
 
   bool isLoading = false;
+  bool isVerifyLoading = false;
   String? profileImage;
   File? imageFile;
 
@@ -28,16 +29,16 @@ class _ProfilePageState extends State<ProfilePage> {
       isLoading = true;
     });
 
-    User? user = _auth.currentUser;
+    // User? user = _auth.currentUser;
 
-    if (!user!.emailVerified) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Email varification link has been sent"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+    // if (!user!.emailVerified) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text("Email varification link has been sent"),
+    //       backgroundColor: Colors.green,
+    //     ),
+    //   );
+    // }
 
     setState(() {
       isLoading = false;
@@ -46,23 +47,25 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _sendEmailVerification() async {
     setState(() {
-      isLoading = true;
+      isVerifyLoading = true;
     });
 
     User? user = _auth.currentUser;
 
     if (!user!.emailVerified) {
       await user.sendEmailVerification();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Email varification link has been sent"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Email varification link has been sent"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
 
     setState(() {
-      isLoading = false;
+      isVerifyLoading = false;
     });
   }
 
@@ -144,82 +147,201 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         title: const Text("Profile"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _pickImage();
-              },
-              child: Stack(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _pickImage();
+                },
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 100,
+                      backgroundImage: imageFile != null
+                          ? FileImage(imageFile!)
+                          : profileImage != null
+                              ? NetworkImage(profileImage!)
+                              : const AssetImage(
+                                  'assets/images/dummy_picture.webp'),
+                    ),
+                    Positioned(
+                      bottom: 10,
+                      right: 10,
+                      child: Container(
+                        height: 40,
+                        width: 40,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(100),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                              ),
+                            ]),
+                        child: const Icon(Icons.camera_alt),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              _auth.currentUser!.emailVerified
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Your email has been verified ",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        Icon(
+                          Icons.verified,
+                          color: Colors.blue,
+                        ),
+                      ],
+                    )
+                  : isVerifyLoading
+                      ? const CircularProgressIndicator()
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "This email is not verified. ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                _sendEmailVerification();
+                              },
+                              child: const Text(
+                                "Verify now?",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+              const SizedBox(
+                height: 10,
+              ),
+              SizedBox(
+                width: query9(context),
+                child: TextFormField(
+                  controller: firstNameController,
+                  decoration: InputDecoration(
+                    hintText: "First Name",
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'First name tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              SizedBox(
+                width: query9(context),
+                child: TextFormField(
+                  controller: lastNameController,
+                  decoration: InputDecoration(
+                    hintText: "Last Name",
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  keyboardType: TextInputType.name,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Last name tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: imageFile != null
-                        ? FileImage(imageFile!)
-                        : profileImage != null
-                            ? NetworkImage(profileImage!)
-                            : AssetImage('assets/images/barelang.png'),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/change-password');
+                    },
+                    child: const Text(
+                      "Change Password",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.blue,
+                      ),
+                    ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Icon(Icons.camera_alt),
+                  const SizedBox(
+                    width: 10,
                   ),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: () {
+                            if (firstNameController.text.isNotEmpty &&
+                                lastNameController.text.isNotEmpty) {
+                              _updateProfile();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      "First name and last name can't be empty"),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            "Save",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                 ],
               ),
-            ),
-            TextFormField(
-              controller: firstNameController,
-              decoration: InputDecoration(labelText: "First Name"),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            TextFormField(
-              controller: lastNameController,
-              decoration: InputDecoration(labelText: "Last Name"),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: () {
-                      if (firstNameController.text.isNotEmpty &&
-                          lastNameController.text.isNotEmpty) {
-                        _updateProfile();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text("First name and last name can't be empty"),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text("Save"),
-                  ),
-            _auth.currentUser!.emailVerified
-                ? Text("Email Verified")
-                : isLoading
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: () {
-                          _sendEmailVerification();
-                        },
-                        child: Text("Verify Email"),
-                      ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/change-password');
-              },
-              child: Text("Change Password"),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
